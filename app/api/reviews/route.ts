@@ -68,12 +68,12 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { productId, rating, comment } = body;
+    const { productId, rating, title, comment } = body;
 
     // Validate required fields
-    if (!productId || !rating) {
+    if (!productId || !rating || !title) {
       return NextResponse.json(
-        { error: 'Product ID and rating are required' },
+        { error: 'Product ID, rating, and title are required' },
         { status: 400 }
       );
     }
@@ -86,9 +86,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if product exists
+    // Check if product exists and get seller info
     const product = await prisma.product.findUnique({
       where: { id: productId },
+      include: {
+        seller: true,
+      },
     });
 
     if (!product) {
@@ -118,7 +121,9 @@ export async function POST(request: NextRequest) {
       data: {
         productId,
         userId: payload.userId,
+        sellerId: product.sellerId,
         rating,
+        title,
         comment: comment || '',
       },
       include: {
