@@ -1,0 +1,201 @@
+// Prisma Schema for Qavah-mart E-commerce Platform
+// Database: PostgreSQL
+// ORM: Prisma
+
+generator client {
+  provider = "prisma-client-js"
+  engineType = "binary"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================================================
+// User and Authentication Models
+// ============================================================================
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  password      String   // Hashed password
+  firstName     String
+  lastName      String
+  phone         String?
+  avatar        String?
+  isVerified    Boolean  @default(false)
+  isSeller      Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // Location (embedded)
+  city          String
+  region        String
+  country       String   @default("Ethiopia")
+  latitude      Float?
+  longitude     Float?
+  
+  // Relationships
+  seller        Seller?
+  reviews       Review[]
+  
+  @@index([email])
+  @@index([isSeller])
+  @@map("users")
+}
+
+model Seller {
+  id                  String   @id @default(cuid())
+  userId              String   @unique
+  businessName        String?
+  businessType        String   @default("individual") // individual | business
+  verificationStatus  String   @default("pending")    // pending | verified | rejected
+  rating              Float    @default(0)
+  totalSales          Int      @default(0)
+  responseTime        Int      @default(24)           // in hours
+  joinedDate          DateTime @default(now())
+  
+  // Relationships
+  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  products            Product[]
+  reviews             Review[]
+  
+  @@index([userId])
+  @@index([verificationStatus])
+  @@map("sellers")
+}
+
+// ============================================================================
+// Product Models
+// ============================================================================
+
+model Product {
+  id            String   @id @default(cuid())
+  title         String
+  description   String   @db.Text
+  price         Float
+  condition     String   // new | used | refurbished
+  category      String
+  subcategory   String
+  brand         String
+  images        String[] // Array of image URLs
+  status        String   @default("active") // active | sold | inactive
+  views         Int      @default(0)
+  favorites     Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // Location (embedded)
+  city          String
+  region        String
+  country       String   @default("Ethiopia")
+  latitude      Float?
+  longitude     Float?
+  
+  // Specifications (JSON)
+  specifications Json    @default("{}")
+  
+  // Relationships
+  sellerId      String
+  seller        Seller   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  reviews       Review[]
+  
+  @@index([sellerId])
+  @@index([category])
+  @@index([subcategory])
+  @@index([brand])
+  @@index([condition])
+  @@index([status])
+  @@index([price])
+  @@index([createdAt])
+  @@map("products")
+}
+
+// ============================================================================
+// Review and Rating Models
+// ============================================================================
+
+model Review {
+  id          String   @id @default(cuid())
+  rating      Int      // 1-5
+  title       String
+  comment     String   @db.Text
+  helpful     Int      @default(0)
+  verified    Boolean  @default(false) // verified purchase
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relationships
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  sellerId    String
+  seller      Seller   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  
+  @@unique([productId, userId]) // One review per user per product
+  @@index([productId])
+  @@index([userId])
+  @@index([sellerId])
+  @@index([rating])
+  @@index([createdAt])
+  @@map("reviews")
+}
+
+// ============================================================================
+// Category Models
+// ============================================================================
+
+model Category {
+  id            String        @id @default(cuid())
+  name          String
+  slug          String        @unique
+  description   String        @db.Text
+  featuredBrands String[]     // Array of brand names
+  specifications Json         @default("[]") // Array of specification templates
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  
+  // Relationships
+  subcategories Subcategory[]
+  
+  @@index([slug])
+  @@map("categories")
+}
+
+model Subcategory {
+  id             String   @id @default(cuid())
+  name           String
+  slug           String
+  specifications Json     @default("[]") // Array of specification templates
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  
+  // Relationships
+  categoryId     String
+  category       Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  
+  @@unique([categoryId, slug])
+  @@index([categoryId])
+  @@index([slug])
+  @@map("subcategories")
+}
+
+// ============================================================================
+// Session Model (for JWT alternative - optional)
+// ============================================================================
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
+  @@map("sessions")
+}
