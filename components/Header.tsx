@@ -4,7 +4,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useRef, useEffect, FormEvent } from 'react';
 import { useApp } from '@/contexts/AppContext';
-import { Search, MapPin, ChevronDown, X, Menu } from 'lucide-react';
+import { useUser } from '@/contexts/UserContext';
+import { Search, MapPin, ChevronDown, X, Menu, User as UserIcon, LogOut, LayoutDashboard, UserCircle } from 'lucide-react';
 
 // Available locations from mock data
 const AVAILABLE_LOCATIONS = [
@@ -23,16 +24,22 @@ const AVAILABLE_LOCATIONS = [
 export default function Header() {
   const router = useRouter();
   const { location, setLocation } = useApp();
+  const { user, isAuthenticated, logout } = useUser();
   const [searchQuery, setSearchQuery] = useState('');
   const [isLocationDropdownOpen, setIsLocationDropdownOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const locationDropdownRef = useRef<HTMLDivElement>(null);
+  const userMenuRef = useRef<HTMLDivElement>(null);
 
-  // Close location dropdown when clicking outside
+  // Close dropdowns when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (locationDropdownRef.current && !locationDropdownRef.current.contains(event.target as Node)) {
         setIsLocationDropdownOpen(false);
+      }
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setIsUserMenuOpen(false);
       }
     }
 
@@ -67,6 +74,16 @@ export default function Header() {
 
   // Get current location display text
   const currentLocationDisplay = location || 'All Ethiopia';
+
+  // Handle logout
+  const handleLogout = () => {
+    logout();
+    setIsUserMenuOpen(false);
+    router.push('/');
+  };
+
+  // Get user display name
+  const userDisplayName = user ? `${user.firstName} ${user.lastName}` : '';
 
   return (
     <header className="bg-white border-b border-neutral-200 sticky top-0 z-50 shadow-sm" role="banner">
@@ -103,6 +120,87 @@ export default function Header() {
               </button>
             </div>
           </form>
+
+          {/* User Authentication */}
+          <nav aria-label="User menu" className="flex items-center gap-2">
+            {!isAuthenticated ? (
+              <>
+                {/* Login Button */}
+                <Link
+                  href="/user/login"
+                  className="px-4 py-2 text-sm font-medium text-neutral-700 hover:text-primary-700 hover:bg-neutral-50 rounded-lg transition-colors whitespace-nowrap"
+                >
+                  Login
+                </Link>
+                
+                {/* Register Button */}
+                <Link
+                  href="/user/register"
+                  className="px-4 py-2 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors whitespace-nowrap"
+                >
+                  Register
+                </Link>
+              </>
+            ) : (
+              /* User Menu Dropdown */
+              <div className="relative" ref={userMenuRef}>
+                <button
+                  onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                  className="flex items-center gap-2 px-3 py-2 text-neutral-700 hover:text-primary-700 hover:bg-neutral-50 rounded-lg transition-colors"
+                  aria-label="User menu"
+                  aria-expanded={isUserMenuOpen}
+                  aria-haspopup="true"
+                >
+                  <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
+                    <UserIcon className="w-5 h-5 text-primary-700" aria-hidden="true" />
+                  </div>
+                  <span className="text-sm font-medium max-w-32 truncate">{userDisplayName}</span>
+                  <ChevronDown className={`w-4 h-4 transition-transform ${isUserMenuOpen ? 'rotate-180' : ''}`} aria-hidden="true" />
+                </button>
+
+                {/* User Dropdown Menu */}
+                {isUserMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-56 bg-white border border-neutral-200 rounded-lg shadow-lg py-2" role="menu">
+                    <div className="px-4 py-2 border-b border-neutral-200">
+                      <p className="text-sm font-medium text-neutral-900">{userDisplayName}</p>
+                      <p className="text-xs text-neutral-500 truncate">{user?.email}</p>
+                    </div>
+
+                    <Link
+                      href="/user/profile"
+                      className="flex items-center gap-3 px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 transition-colors"
+                      role="menuitem"
+                      onClick={() => setIsUserMenuOpen(false)}
+                    >
+                      <UserCircle className="w-4 h-4" aria-hidden="true" />
+                      <span>My Profile</span>
+                    </Link>
+
+                    <Link
+                      href="/user/dashboard"
+                      className="flex items-center gap-3 px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 transition-colors"
+                      role="menuitem"
+                      onClick={() => setIsUserMenuOpen(false)}
+                    >
+                      <LayoutDashboard className="w-4 h-4" aria-hidden="true" />
+                      <span>Dashboard</span>
+                    </Link>
+
+                    <div className="border-t border-neutral-200 my-2" role="separator"></div>
+
+                    <button
+                      onClick={handleLogout}
+                      className="flex items-center gap-3 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                      role="menuitem"
+                    >
+                      <LogOut className="w-4 h-4" aria-hidden="true" />
+                      <span>Logout</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </nav>
 
           {/* Location Selector */}
           <nav aria-label="Location selector">
@@ -183,8 +281,30 @@ export default function Header() {
               Qavah-mart
             </Link>
 
-            {/* Location Icon - Touch optimized (44x44px) */}
-            <button
+            {/* Right Side Icons */}
+            <div className="flex items-center gap-1">
+              {/* User Icon - Touch optimized (44x44px) */}
+              {isAuthenticated ? (
+                <button
+                  onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                  className="p-3 text-neutral-700 hover:text-primary-700 active:bg-primary-50 rounded-lg transition-colors touch-manipulation"
+                  aria-label="User menu"
+                  aria-expanded={isUserMenuOpen}
+                >
+                  <UserIcon className="w-6 h-6" aria-hidden="true" />
+                </button>
+              ) : (
+                <Link
+                  href="/user/login"
+                  className="p-3 text-neutral-700 hover:text-primary-700 active:bg-primary-50 rounded-lg transition-colors touch-manipulation"
+                  aria-label="Login"
+                >
+                  <UserIcon className="w-6 h-6" aria-hidden="true" />
+                </Link>
+              )}
+
+              {/* Location Icon - Touch optimized (44x44px) */}
+              <button
               onClick={() => setIsLocationDropdownOpen(!isLocationDropdownOpen)}
               className="p-3 -mr-3 text-neutral-700 hover:text-primary-700 active:bg-primary-50 rounded-lg transition-colors touch-manipulation"
               aria-label={`Select location. Current: ${currentLocationDisplay}`}
@@ -192,6 +312,7 @@ export default function Header() {
             >
               <MapPin className="w-6 h-6" aria-hidden="true" />
             </button>
+            </div>
           </div>
 
           {/* Mobile Search Bar - Improved touch targets */}
@@ -215,6 +336,57 @@ export default function Header() {
               </button>
             </div>
           </form>
+
+          {/* Mobile User Menu Dropdown */}
+          {isUserMenuOpen && isAuthenticated && (
+            <>
+              {/* Backdrop */}
+              <div
+                className="fixed inset-0 bg-black bg-opacity-30 z-40"
+                onClick={() => setIsUserMenuOpen(false)}
+                aria-hidden="true"
+              />
+              
+              {/* Dropdown Panel */}
+              <div className="fixed left-4 right-4 top-32 bg-white border border-neutral-200 rounded-lg shadow-xl py-2 z-50" role="menu">
+                <div className="px-4 py-3 border-b border-neutral-200">
+                  <p className="text-base font-medium text-neutral-900">{userDisplayName}</p>
+                  <p className="text-sm text-neutral-500 truncate">{user?.email}</p>
+                </div>
+
+                <Link
+                  href="/user/profile"
+                  className="flex items-center gap-3 px-4 py-3 text-base text-neutral-700 hover:bg-neutral-50 active:bg-neutral-100 transition-colors touch-manipulation"
+                  role="menuitem"
+                  onClick={() => setIsUserMenuOpen(false)}
+                >
+                  <UserCircle className="w-5 h-5" aria-hidden="true" />
+                  <span>My Profile</span>
+                </Link>
+
+                <Link
+                  href="/user/dashboard"
+                  className="flex items-center gap-3 px-4 py-3 text-base text-neutral-700 hover:bg-neutral-50 active:bg-neutral-100 transition-colors touch-manipulation"
+                  role="menuitem"
+                  onClick={() => setIsUserMenuOpen(false)}
+                >
+                  <LayoutDashboard className="w-5 h-5" aria-hidden="true" />
+                  <span>Dashboard</span>
+                </Link>
+
+                <div className="border-t border-neutral-200 my-2" role="separator"></div>
+
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center gap-3 w-full px-4 py-3 text-base text-red-600 hover:bg-red-50 active:bg-red-100 transition-colors touch-manipulation"
+                  role="menuitem"
+                >
+                  <LogOut className="w-5 h-5" aria-hidden="true" />
+                  <span>Logout</span>
+                </button>
+              </div>
+            </>
+          )}
 
           {/* Mobile Location Dropdown - Improved touch targets */}
           {isLocationDropdownOpen && (
