@@ -56,7 +56,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         country: 'Ethiopia',
       },
       createdAt: new Date(),
-      isVerified: false,
+      isVerified: true, // Auto-verified for demo (no email verification implemented)
       isSeller: false,
     };
 
@@ -81,7 +81,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
       phone: userData.phone,
       location: userData.location,
       createdAt: new Date(),
-      isVerified: false,
+      isVerified: true, // Auto-verified for demo (no email verification implemented)
       isSeller: false,
     };
 
