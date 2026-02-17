@@ -22,6 +22,13 @@ jest.mock('@/components/ProductCard', () => {
   };
 });
 
+// Mock RatingDisplay component
+jest.mock('@/components/RatingDisplay', () => {
+  return function MockRatingDisplay({ rating, reviewCount }: any) {
+    return <div data-testid="rating-display">{rating.toFixed(1)} ({reviewCount} reviews)</div>;
+  };
+});
+
 // Mock mockProducts
 jest.mock('@/data/mockData', () => ({
   mockProducts: [
@@ -65,6 +72,7 @@ jest.mock('@/data/mockData', () => ({
       status: 'active',
     },
   ],
+  mockReviews: [],
 }));
 
 describe('ProfilePage', () => {

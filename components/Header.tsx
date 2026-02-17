@@ -163,11 +163,11 @@ export default function Header() {
 
         {/* Mobile Header */}
         <div className="md:hidden">
-          <div className="flex items-center justify-between h-14">
-            {/* Mobile Menu Button */}
+          <div className="flex items-center justify-between h-16">
+            {/* Mobile Menu Button - Touch optimized (44x44px) */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="p-2 text-neutral-700 hover:text-primary-700"
+              className="p-3 -ml-3 text-neutral-700 hover:text-primary-700 active:bg-primary-50 rounded-lg transition-colors touch-manipulation"
               aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
               aria-expanded={isMobileMenuOpen}
             >
@@ -177,16 +177,16 @@ export default function Header() {
             {/* Logo */}
             <Link 
               href="/" 
-              className="text-xl font-bold text-primary-700"
+              className="text-xl font-bold text-primary-700 active:text-primary-800 transition-colors"
               aria-label="Qavah-mart home"
             >
               Qavah-mart
             </Link>
 
-            {/* Location Icon */}
+            {/* Location Icon - Touch optimized (44x44px) */}
             <button
               onClick={() => setIsLocationDropdownOpen(!isLocationDropdownOpen)}
-              className="p-2 text-neutral-700 hover:text-primary-700"
+              className="p-3 -mr-3 text-neutral-700 hover:text-primary-700 active:bg-primary-50 rounded-lg transition-colors touch-manipulation"
               aria-label={`Select location. Current: ${currentLocationDisplay}`}
               aria-expanded={isLocationDropdownOpen}
             >
@@ -194,21 +194,21 @@ export default function Header() {
             </button>
           </div>
 
-          {/* Mobile Search Bar */}
-          <form onSubmit={handleSearchSubmit} className="pb-3" role="search">
+          {/* Mobile Search Bar - Improved touch targets */}
+          <form onSubmit={handleSearchSubmit} className="pb-4" role="search">
             <div className="relative">
               <input
                 type="search"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search products..."
-                className="w-full pl-10 pr-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
+                className="w-full pl-11 pr-20 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-base touch-manipulation"
                 aria-label="Search for products"
               />
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" aria-hidden="true" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" aria-hidden="true" />
               <button
                 type="submit"
-                className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1 bg-primary-600 text-white text-xs rounded hover:bg-primary-700"
+                className="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-2 bg-primary-600 text-white text-sm rounded-md hover:bg-primary-700 active:bg-primary-800 transition-colors touch-manipulation"
                 aria-label="Submit search"
               >
                 Search
@@ -216,41 +216,51 @@ export default function Header() {
             </div>
           </form>
 
-          {/* Mobile Location Dropdown */}
+          {/* Mobile Location Dropdown - Improved touch targets */}
           {isLocationDropdownOpen && (
-            <div className="absolute left-0 right-0 mt-1 mx-4 bg-white border border-neutral-200 rounded-lg shadow-lg py-2 max-h-80 overflow-y-auto z-50" role="menu">
-              <button
-                onClick={handleClearLocation}
-                className="w-full px-4 py-2 text-left text-sm hover:bg-neutral-50 flex items-center justify-between"
-                role="menuitem"
-              >
-                <span className="font-medium text-neutral-900">All Ethiopia</span>
-                {!location && <span className="text-primary-600 text-xs" aria-label="Selected">✓</span>}
-              </button>
+            <>
+              {/* Backdrop */}
+              <div
+                className="fixed inset-0 bg-black bg-opacity-30 z-40"
+                onClick={() => setIsLocationDropdownOpen(false)}
+                aria-hidden="true"
+              />
               
-              <div className="border-t border-neutral-200 my-2" role="separator"></div>
-
-              {AVAILABLE_LOCATIONS.map((loc) => {
-                const locationString = `${loc.city}, ${loc.region}`;
-                const isSelected = location === locationString;
+              {/* Dropdown Panel */}
+              <div className="fixed left-4 right-4 top-32 bg-white border border-neutral-200 rounded-lg shadow-xl py-2 max-h-96 overflow-y-auto z-50 animate-slide-in" role="menu">
+                <button
+                  onClick={handleClearLocation}
+                  className="w-full px-4 py-3 text-left text-base hover:bg-neutral-50 active:bg-neutral-100 flex items-center justify-between transition-colors touch-manipulation"
+                  role="menuitem"
+                >
+                  <span className="font-medium text-neutral-900">All Ethiopia</span>
+                  {!location && <span className="text-primary-600 text-sm" aria-label="Selected">✓</span>}
+                </button>
                 
-                return (
-                  <button
-                    key={locationString}
-                    onClick={() => handleLocationSelect(locationString)}
-                    className="w-full px-4 py-2 text-left text-sm hover:bg-neutral-50 flex items-center justify-between"
-                    role="menuitem"
-                    aria-current={isSelected ? 'true' : undefined}
-                  >
-                    <div>
-                      <div className="font-medium text-neutral-900">{loc.city}</div>
-                      <div className="text-xs text-neutral-500">{loc.region}</div>
-                    </div>
-                    {isSelected && <span className="text-primary-600 text-xs" aria-label="Selected">✓</span>}
-                  </button>
-                );
-              })}
-            </div>
+                <div className="border-t border-neutral-200 my-2" role="separator"></div>
+
+                {AVAILABLE_LOCATIONS.map((loc) => {
+                  const locationString = `${loc.city}, ${loc.region}`;
+                  const isSelected = location === locationString;
+                  
+                  return (
+                    <button
+                      key={locationString}
+                      onClick={() => handleLocationSelect(locationString)}
+                      className="w-full px-4 py-3 text-left text-base hover:bg-neutral-50 active:bg-neutral-100 flex items-center justify-between transition-colors touch-manipulation"
+                      role="menuitem"
+                      aria-current={isSelected ? 'true' : undefined}
+                    >
+                      <div>
+                        <div className="font-medium text-neutral-900">{loc.city}</div>
+                        <div className="text-sm text-neutral-500">{loc.region}</div>
+                      </div>
+                      {isSelected && <span className="text-primary-600 text-sm" aria-label="Selected">✓</span>}
+                    </button>
+                  );
+                })}
+              </div>
+            </>
           )}
         </div>
       </div>

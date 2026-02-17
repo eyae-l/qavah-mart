@@ -168,7 +168,7 @@ export default function CategoryNav() {
           <div className="flex items-center justify-between py-3">
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-neutral-700 hover:text-primary-700 hover:bg-primary-100 rounded-lg transition-colors"
+              className="flex items-center gap-2 px-4 py-3 text-base font-medium text-neutral-700 hover:text-primary-700 active:bg-primary-100 rounded-lg transition-colors touch-manipulation"
               aria-label="Toggle categories menu"
               aria-expanded={isMobileMenuOpen}
             >
@@ -184,15 +184,28 @@ export default function CategoryNav() {
           {/* Mobile Menu Overlay */}
           {isMobileMenuOpen && (
             <>
-              {/* Backdrop */}
+              {/* Backdrop with fade-in animation */}
               <div
-                className="fixed inset-0 bg-black bg-opacity-50 z-40"
+                className="fixed inset-0 bg-black bg-opacity-50 z-40 animate-fade-in"
                 onClick={() => setIsMobileMenuOpen(false)}
                 aria-hidden="true"
               />
 
-              {/* Mobile Menu Panel */}
-              <div className="fixed left-0 right-0 top-[112px] bottom-0 bg-white z-50 overflow-y-auto">
+              {/* Mobile Menu Panel with slide-in animation */}
+              <div className="fixed left-0 right-0 top-[128px] bottom-0 bg-white z-50 overflow-y-auto animate-slide-in shadow-2xl">
+                {/* Menu Header */}
+                <div className="sticky top-0 bg-white border-b border-neutral-200 px-4 py-3 flex items-center justify-between z-10">
+                  <h2 className="text-lg font-semibold text-neutral-900">Browse Categories</h2>
+                  <button
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="p-2 text-neutral-700 hover:text-primary-700 active:bg-neutral-100 rounded-lg transition-colors touch-manipulation"
+                    aria-label="Close categories menu"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
+                </div>
+
+                {/* Categories List */}
                 <div className="py-2">
                   {categories.map((category) => {
                     const isActive = isCategoryActive(category.slug);
@@ -200,16 +213,16 @@ export default function CategoryNav() {
                     const isOpen = mobileOpenCategory === category.slug;
 
                     return (
-                      <div key={category.slug} className="border-b border-neutral-200">
+                      <div key={category.slug} className="border-b border-neutral-200 last:border-b-0">
                         <div className="flex items-center">
                           <Link
                             href={`/categories/${category.slug}`}
                             className={`
-                              flex-1 px-4 py-3 text-sm font-medium transition-colors
+                              flex-1 px-4 py-4 text-base font-medium transition-colors touch-manipulation
                               ${
                                 isActive
                                   ? 'bg-primary-50 text-primary-700'
-                                  : 'text-neutral-700 hover:bg-neutral-50'
+                                  : 'text-neutral-700 active:bg-neutral-50'
                               }
                             `}
                           >
@@ -219,12 +232,12 @@ export default function CategoryNav() {
                           {hasSubcategories && (
                             <button
                               onClick={() => toggleMobileCategory(category.slug)}
-                              className="px-4 py-3 text-neutral-700 hover:bg-neutral-50"
+                              className="px-4 py-4 text-neutral-700 active:bg-neutral-50 transition-colors touch-manipulation"
                               aria-label={`Toggle ${category.name} subcategories`}
                               aria-expanded={isOpen}
                             >
                               <ChevronDown
-                                className={`w-5 h-5 transition-transform duration-200 ${
+                                className={`w-6 h-6 transition-transform duration-200 ${
                                   isOpen ? 'rotate-180' : ''
                                 }`}
                               />
@@ -232,9 +245,9 @@ export default function CategoryNav() {
                           )}
                         </div>
 
-                        {/* Mobile Subcategories */}
+                        {/* Mobile Subcategories with slide animation */}
                         {hasSubcategories && isOpen && (
-                          <div className="bg-neutral-50 py-1">
+                          <div className="bg-neutral-50 py-1 animate-slide-down">
                             {category.subcategories.map((subcategory) => {
                               const subcategorySlug = subcategory.toLowerCase().replace(/\s+/g, '-');
                               const isSubActive = isSubcategoryActive(category.slug, subcategory);
@@ -244,11 +257,11 @@ export default function CategoryNav() {
                                   key={subcategory}
                                   href={`/categories/${category.slug}/${subcategorySlug}`}
                                   className={`
-                                    block px-8 py-2 text-sm transition-colors
+                                    block px-8 py-3 text-base transition-colors touch-manipulation
                                     ${
                                       isSubActive
                                         ? 'bg-primary-100 text-primary-700 font-medium'
-                                        : 'text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900'
+                                        : 'text-neutral-600 active:bg-neutral-100 active:text-neutral-900'
                                     }
                                   `}
                                 >

@@ -1,12 +1,26 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { ChevronRight } from 'lucide-react';
 import { mockProducts, mockSellers, mockReviews, mockUsers } from '@/data/mockData';
-import ProductImageGallery from '@/components/ProductImageGallery';
 import ProductDetails from '@/components/ProductDetails';
-import RatingDisplay from '@/components/RatingDisplay';
-import RatingDistribution from '@/components/RatingDistribution';
-import ReviewList from '@/components/ReviewList';
+
+// Dynamic imports for heavy components
+const ProductImageGallery = dynamic(() => import('@/components/ProductImageGallery'), {
+  loading: () => (
+    <div className="w-full aspect-square bg-neutral-100 rounded-lg animate-pulse flex items-center justify-center">
+      <div className="text-neutral-400">Loading gallery...</div>
+    </div>
+  ),
+});
+
+const ReviewSection = dynamic(() => import('@/components/ReviewSection'), {
+  loading: () => (
+    <div className="border-t border-neutral-200 pt-12 mb-12">
+      <div className="h-64 bg-neutral-100 rounded-lg animate-pulse"></div>
+    </div>
+  ),
+});
 
 /**
  * Product Detail Page
@@ -290,61 +304,13 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
         </article>
         
         {/* Reviews Section */}
-        <section className="border-t border-neutral-200 pt-12 mb-12" aria-labelledby="reviews-heading">
-          <h2 id="reviews-heading" className="text-2xl font-bold text-neutral-900 mb-6">
-            Customer Reviews
-          </h2>
-          
-          {productReviews.length > 0 ? (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Left Column - Rating Summary */}
-              <aside className="lg:col-span-1" aria-labelledby="rating-summary-heading">
-                <h3 id="rating-summary-heading" className="sr-only">Rating Summary</h3>
-                <div className="bg-neutral-50 rounded-lg p-6">
-                  {/* Average Rating */}
-                  <div className="text-center mb-6">
-                    <div className="text-5xl font-bold text-neutral-900 mb-2" aria-label={`Average rating: ${averageRating.toFixed(1)} out of 5`}>
-                      {averageRating.toFixed(1)}
-                    </div>
-                    <RatingDisplay
-                      rating={averageRating}
-                      reviewCount={productReviews.length}
-                      size="large"
-                    />
-                    <p className="text-sm text-neutral-600 mt-2">
-                      Based on {productReviews.length} {productReviews.length === 1 ? 'review' : 'reviews'}
-                    </p>
-                  </div>
-                  
-                  {/* Rating Distribution */}
-                  <div className="border-t border-neutral-200 pt-6">
-                    <h4 className="text-sm font-semibold text-neutral-900 mb-4">
-                      Rating Breakdown
-                    </h4>
-                    <RatingDistribution reviews={productReviews} />
-                  </div>
-                </div>
-              </aside>
-              
-              {/* Right Column - Review List */}
-              <div className="lg:col-span-2">
-                <ReviewList
-                  reviews={productReviews}
-                  users={mockUsers}
-                />
-              </div>
-            </div>
-          ) : (
-            <div className="text-center py-12 bg-neutral-50 rounded-lg">
-              <p className="text-neutral-600 mb-4">
-                No reviews yet for this product.
-              </p>
-              <p className="text-sm text-neutral-500">
-                Be the first to share your experience!
-              </p>
-            </div>
-          )}
-        </section>
+        <ReviewSection
+          productId={product.id}
+          sellerId={product.sellerId}
+          reviews={productReviews}
+          users={mockUsers}
+          averageRating={averageRating}
+        />
         
         {/* Related Products Section */}
         {relatedProducts.length > 0 && (

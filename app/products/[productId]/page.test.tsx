@@ -17,6 +17,29 @@ jest.mock('next/image', () => ({
   },
 }));
 
+// Mock ReviewSection component
+jest.mock('@/components/ReviewSection', () => ({
+  __esModule: true,
+  default: ({ productId, reviews, averageRating }: any) => (
+    <section data-testid="review-section">
+      <h2>Customer Reviews</h2>
+      {reviews.length > 0 ? (
+        <>
+          <div data-testid="rating-display">{averageRating.toFixed(1)}</div>
+          <div>Based on {reviews.length} {reviews.length === 1 ? 'review' : 'reviews'}</div>
+          <div data-testid="rating-distribution">Rating Breakdown</div>
+          <div data-testid="review-list">Review List</div>
+        </>
+      ) : (
+        <>
+          <div>No reviews yet for this product.</div>
+          <div>Be the first to share your experience!</div>
+        </>
+      )}
+    </section>
+  ),
+}));
+
 // Mock ProductImageGallery component
 jest.mock('@/components/ProductImageGallery', () => ({
   __esModule: true,

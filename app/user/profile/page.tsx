@@ -5,8 +5,10 @@ import { useUser } from '@/contexts/UserContext';
 import { mockProducts } from '@/data/mockData';
 import { Product } from '@/types';
 import { useRouter } from 'next/navigation';
-import { MapPin, Mail, Phone, CheckCircle, XCircle, Package } from 'lucide-react';
+import { MapPin, Mail, Phone, CheckCircle, XCircle, Package, Star } from 'lucide-react';
 import ProductCard from '@/components/ProductCard';
+import RatingDisplay from '@/components/RatingDisplay';
+import { mockReviews } from '@/data/mockData';
 
 export default function ProfilePage() {
   const { user, isAuthenticated } = useUser();
@@ -33,6 +35,14 @@ export default function ProfilePage() {
   const userListings: Product[] = mockProducts.filter(
     (product) => product.sellerId === user.id
   );
+
+  // Calculate seller rating from all reviews for user's products
+  const sellerReviews = mockReviews.filter(review => 
+    userListings.some(product => product.id === review.productId)
+  );
+  const sellerRating = sellerReviews.length > 0
+    ? sellerReviews.reduce((sum, review) => sum + review.rating, 0) / sellerReviews.length
+    : 0;
 
   return (
     <div className="min-h-screen bg-neutral-50 py-8">
@@ -63,6 +73,15 @@ export default function ProfilePage() {
                       <span className="flex items-center gap-1 text-sm text-neutral-500">
                         <XCircle className="w-4 h-4" />
                         Not Verified
+                      </span>
+                    )}
+                    {user.isSeller && sellerReviews.length > 0 && (
+                      <span className="ml-2">
+                        <RatingDisplay 
+                          rating={sellerRating} 
+                          reviewCount={sellerReviews.length}
+                          size="small"
+                        />
                       </span>
                     )}
                   </div>
