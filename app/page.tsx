@@ -32,9 +32,8 @@ export const metadata: Metadata = {
 
 async function getFeaturedProducts() {
   try {
-    // Use relative URL for both dev and production
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-    const res = await fetch(`${baseUrl}/api/products-supabase?limit=8`, {
+    // Use relative URL - works in both dev and production
+    const res = await fetch('/api/products-supabase?limit=8', {
       cache: 'no-store',
     });
     if (!res.ok) return [];
