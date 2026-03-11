@@ -26,26 +26,6 @@ export async function GET(request: NextRequest) {
 
     console.log('Fetching products with params:', { category, subcategory, page, limit });
 
-    // Build filter string for Supabase REST API
-    let filters = '';
-    if (category) filters += `&category=eq.${encodeURIComponent(category)}`;
-    if (subcategory) filters += `&subcategory=eq.${encodeURIComponent(subcategory)}`;
-    if (condition) filters += `&condition=eq.${encodeURIComponent(condition)}`;
-    if (city) filters += `&city=eq.${encodeURIComponent(city)}`;
-    if (minPrice) filters += `&price=gte.${parseFloat(minPrice)}`;
-    if (maxPrice) filters += `&price=lte.${parseFloat(maxPrice)}`;
-
-    // Build search filter
-    let searchFilter = '';
-    if (search) {
-      const encoded = encodeURIComponent(search);
-      searchFilter = `&or=(title.ilike.*${encoded}*,description.ilike.*${encoded}*,brand.ilike.*${encoded}*)`;
-    }
-
-    // Calculate pagination
-    const from = (page - 1) * limit;
-    const to = from + limit - 1;
-
     // Build REST API URL
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -58,7 +38,24 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const url = `${supabaseUrl}/rest/v1/products?select=*&order=createdAt.desc${filters}${searchFilter}&limit=${limit}&offset=${from}`;
+    // Build URL with query parameters
+    const urlParams = new URLSearchParams();
+    urlParams.append('select', '*');
+    urlParams.append('order', 'createdAt.desc');
+    
+    // Add filters
+    if (category) urlParams.append('category', `eq.${category}`);
+    if (subcategory) urlParams.append('subcategory', `eq.${subcategory}`);
+    if (condition) urlParams.append('condition', `eq.${condition}`);
+    if (city) urlParams.append('city', `eq.${city}`);
+    if (minPrice) urlParams.append('price', `gte.${parseFloat(minPrice)}`);
+    if (maxPrice) urlParams.append('price', `lte.${parseFloat(maxPrice)}`);
+    
+    // Add pagination
+    urlParams.append('limit', limit.toString());
+    urlParams.append('offset', ((page - 1) * limit).toString());
+
+    const url = `${supabaseUrl}/rest/v1/products?${urlParams.toString()}`;
 
     console.log('Calling Supabase REST API:', url.replace(supabaseKey, '***'));
 
@@ -86,7 +83,16 @@ export async function GET(request: NextRequest) {
     console.log('Products fetched:', products.length);
 
     // Get total count
-    const countUrl = `${supabaseUrl}/rest/v1/products?select=count()${filters}${searchFilter}`;
+    const countParams = new URLSearchParams();
+    countParams.append('select', 'count()');
+    if (category) countParams.append('category', `eq.${category}`);
+    if (subcategory) countParams.append('subcategory', `eq.${subcategory}`);
+    if (condition) countParams.append('condition', `eq.${condition}`);
+    if (city) countParams.append('city', `eq.${city}`);
+    if (minPrice) countParams.append('price', `gte.${parseFloat(minPrice)}`);
+    if (maxPrice) countParams.append('price', `lte.${parseFloat(maxPrice)}`);
+    
+    const countUrl = `${supabaseUrl}/rest/v1/products?${countParams.toString()}`;
     const countResponse = await fetch(countUrl, {
       method: 'GET',
       headers: {
