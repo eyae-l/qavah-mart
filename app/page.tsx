@@ -32,11 +32,13 @@ export const metadata: Metadata = {
 
 async function getFeaturedProducts() {
   try {
-    // Use absolute URL for server-side fetch
-    const baseUrl = process.env.VERCEL_URL 
-      ? `https://${process.env.VERCEL_URL}`
-      : 'http://localhost:3000';
+    // Import headers to get the host dynamically at runtime
+    const { headers } = await import('next/headers');
+    const headersList = await headers();
+    const host = headersList.get('host') || 'localhost:3000';
+    const protocol = headersList.get('x-forwarded-proto') || 'http';
     
+    const baseUrl = `${protocol}://${host}`;
     const res = await fetch(`${baseUrl}/api/products-supabase?limit=8`, {
       next: { revalidate: 60 }, // Cache for 1 minute
     });
