@@ -27,23 +27,10 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
 
-    // Build query
+    // Build query - simplified to avoid join issues
     let query = supabase
       .from('products')
-      .select(`
-        *,
-        seller:sellers!inner(
-          id,
-          businessName,
-          rating,
-          user:users!inner(
-            firstName,
-            lastName,
-            city,
-            region
-          )
-        )
-      `, { count: 'exact' });
+      .select('*', { count: 'exact' });
 
     // Apply filters
     if (category) query = query.eq('category', category);
