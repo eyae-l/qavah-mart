@@ -11,9 +11,6 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    // Lazy import to avoid build-time errors
-    const { supabase } = await import('@/lib/supabase');
-    
     const { searchParams } = new URL(request.url);
     
     // Extract query parameters
@@ -27,40 +24,82 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
 
-    // Build query - simplified to avoid join issues
-    let query = supabase
-      .from('products')
-      .select('*', { count: 'exact' });
+    console.log('Fetching products with params:', { category, subcategory, page, limit });
 
-    // Apply filters
-    if (category) query = query.eq('category', category);
-    if (subcategory) query = query.eq('subcategory', subcategory);
-    if (condition) query = query.eq('condition', condition);
-    if (city) query = query.eq('city', city);
-    if (minPrice) query = query.gte('price', parseFloat(minPrice));
-    if (maxPrice) query = query.lte('price', parseFloat(maxPrice));
-    
+    // Build filter string for Supabase REST API
+    let filters = '';
+    if (category) filters += `&category=eq.${encodeURIComponent(category)}`;
+    if (subcategory) filters += `&subcategory=eq.${encodeURIComponent(subcategory)}`;
+    if (condition) filters += `&condition=eq.${encodeURIComponent(condition)}`;
+    if (city) filters += `&city=eq.${encodeURIComponent(city)}`;
+    if (minPrice) filters += `&price=gte.${parseFloat(minPrice)}`;
+    if (maxPrice) filters += `&price=lte.${parseFloat(maxPrice)}`;
+
+    // Build search filter
+    let searchFilter = '';
     if (search) {
-      query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%,brand.ilike.%${search}%`);
+      const encoded = encodeURIComponent(search);
+      searchFilter = `&or=(title.ilike.*${encoded}*,description.ilike.*${encoded}*,brand.ilike.*${encoded}*)`;
     }
 
-    // Apply sorting (default: newest first)
-    query = query.order('createdAt', { ascending: false });
-
-    // Apply pagination
+    // Calculate pagination
     const from = (page - 1) * limit;
     const to = from + limit - 1;
-    query = query.range(from, to);
 
-    // Execute query
-    const { data: products, error, count } = await query;
+    // Build REST API URL
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-    if (error) {
-      console.error('Supabase error:', error);
+    if (!supabaseUrl || !supabaseKey) {
+      console.error('Missing Supabase credentials');
       return NextResponse.json(
-        { error: 'Failed to fetch products' },
+        { error: 'Supabase not configured' },
         { status: 500 }
       );
+    }
+
+    const url = `${supabaseUrl}/rest/v1/products?select=*&order=createdAt.desc${filters}${searchFilter}&limit=${limit}&offset=${from}`;
+
+    console.log('Calling Supabase REST API:', url.replace(supabaseKey, '***'));
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'apikey': supabaseKey,
+        'Authorization': `Bearer ${supabaseKey}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    console.log('Supabase response status:', response.status);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Supabase error response:', errorText);
+      return NextResponse.json(
+        { error: 'Failed to fetch products', details: errorText },
+        { status: response.status }
+      );
+    }
+
+    const products = await response.json();
+    console.log('Products fetched:', products.length);
+
+    // Get total count
+    const countUrl = `${supabaseUrl}/rest/v1/products?select=count()${filters}${searchFilter}`;
+    const countResponse = await fetch(countUrl, {
+      method: 'GET',
+      headers: {
+        'apikey': supabaseKey,
+        'Authorization': `Bearer ${supabaseKey}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    let total = 0;
+    if (countResponse.ok) {
+      const countData = await countResponse.json();
+      total = countData[0]?.count || 0;
     }
 
     return NextResponse.json({
@@ -68,14 +107,14 @@ export async function GET(request: NextRequest) {
       pagination: {
         page,
         limit,
-        total: count || 0,
-        totalPages: Math.ceil((count || 0) / limit),
+        total,
+        totalPages: Math.ceil(total / limit),
       },
     });
   } catch (error) {
     console.error('Get products error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Internal server error', details: String(error) },
       { status: 500 }
     );
   }
