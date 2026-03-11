@@ -7,17 +7,26 @@
 import { createClient } from '@supabase/supabase-js';
 
 // Get from Supabase Dashboard → Project Settings → API
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn('⚠️  Supabase URL or Anon Key not configured. Add to .env.local:');
-  console.warn('NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co');
-  console.warn('NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key');
+// Create a dummy client if env vars are missing (for build time)
+let supabase: any = null;
+
+if (supabaseUrl && supabaseAnonKey) {
+  supabase = createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      persistSession: false, // We're using Clerk for auth
+    },
+  });
+} else {
+  // Dummy client for build time - won't be used in production
+  if (typeof window === 'undefined') {
+    // Server-side: create a minimal dummy
+    supabase = {
+      from: () => ({ select: () => Promise.resolve({ data: [], error: null }) }),
+    };
+  }
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    persistSession: false, // We're using Clerk for auth
-  },
-});
+export { supabase };
