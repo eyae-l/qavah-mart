@@ -4,7 +4,6 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
 
 // Mark as dynamic to prevent pre-rendering during build
 export const dynamic = 'force-dynamic';
@@ -14,6 +13,9 @@ export async function GET(
   { params }: { params: Promise<{ productId: string }> }
 ) {
   try {
+    // Lazy import to avoid build-time errors
+    const { supabase } = await import('@/lib/supabase');
+    
     const { productId } = await params;
 
     // Fetch product with seller info
