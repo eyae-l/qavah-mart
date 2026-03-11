@@ -32,12 +32,9 @@ export const metadata: Metadata = {
 
 async function getFeaturedProducts() {
   try {
-    // Use absolute URL with Vercel environment variable
-    const baseUrl = process.env.VERCEL_URL 
-      ? `https://${process.env.VERCEL_URL}`
-      : 'http://localhost:3000';
-    const res = await fetch(`${baseUrl}/api/products-supabase?limit=8`, {
-      next: { revalidate: 3600 }, // Cache for 1 hour
+    // Use relative URL - works on both localhost and Vercel
+    const res = await fetch(`/api/products-supabase?limit=8`, {
+      next: { revalidate: 60 }, // Cache for 1 minute
     });
     if (!res.ok) return [];
     const data = await res.json();
