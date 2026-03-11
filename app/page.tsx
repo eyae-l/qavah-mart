@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import { headers } from 'next/headers';
 import ProductGrid from '@/components/ProductGrid';
 
 export const metadata: Metadata = {
@@ -32,8 +33,6 @@ export const metadata: Metadata = {
 
 async function getFeaturedProducts() {
   try {
-    // Import headers to get the host dynamically at runtime
-    const { headers } = await import('next/headers');
     const headersList = await headers();
     const host = headersList.get('host') || 'localhost:3000';
     const protocol = headersList.get('x-forwarded-proto') || 'http';
