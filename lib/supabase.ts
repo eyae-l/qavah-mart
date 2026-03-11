@@ -6,6 +6,10 @@
 
 import { createClient } from '@supabase/supabase-js';
 
+// Get from Supabase Dashboard → Project Settings → API
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
 // Dummy client for build time - won't be used in production
 const dummyClient = {
   from: () => ({ 
@@ -16,11 +20,7 @@ const dummyClient = {
   }),
 };
 
-// Get from Supabase Dashboard → Project Settings → API
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-// Create client safely - use dummy if env vars are missing
+// Create client - use real client if env vars exist, otherwise dummy
 let supabase: any = dummyClient;
 
 if (supabaseUrl && supabaseAnonKey) {
@@ -35,6 +35,8 @@ if (supabaseUrl && supabaseAnonKey) {
     console.warn('Failed to initialize Supabase client, using dummy client');
     supabase = dummyClient;
   }
+} else {
+  console.warn('Supabase environment variables not configured, using dummy client');
 }
 
 export { supabase };
