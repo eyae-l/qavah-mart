@@ -7,7 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { verifyToken } from '@/lib/auth';
+import { requireAuth } from '@/lib/clerkAuth';
 
 export async function GET(
   request: NextRequest,
@@ -85,24 +85,8 @@ export async function PUT(
   try {
     const { productId } = await params;
 
-    // Get token from Authorization header
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    const token = authHeader.substring(7);
-    const payload = verifyToken(token);
-
-    if (!payload) {
-      return NextResponse.json(
-        { error: 'Invalid token' },
-        { status: 401 }
-      );
-    }
+    // Authenticate with Clerk
+    const user = await requireAuth();
 
     // Get product to check ownership
     const product = await prisma.product.findUnique({
@@ -120,7 +104,7 @@ export async function PUT(
     }
 
     // Check if user owns this product
-    if (product.seller.userId !== payload.userId) {
+    if (product.seller.userId !== user.userId) {
       return NextResponse.json(
         { error: 'Forbidden: You can only update your own products' },
         { status: 403 }
@@ -174,8 +158,16 @@ export async function PUT(
     });
 
     return NextResponse.json(updatedProduct);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Update product error:', error);
+    
+    if (error.message === 'Unauthorized') {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+    
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -190,24 +182,8 @@ export async function DELETE(
   try {
     const { productId } = await params;
 
-    // Get token from Authorization header
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    const token = authHeader.substring(7);
-    const payload = verifyToken(token);
-
-    if (!payload) {
-      return NextResponse.json(
-        { error: 'Invalid token' },
-        { status: 401 }
-      );
-    }
+    // Authenticate with Clerk
+    const user = await requireAuth();
 
     // Get product to check ownership
     const product = await prisma.product.findUnique({
@@ -225,7 +201,7 @@ export async function DELETE(
     }
 
     // Check if user owns this product
-    if (product.seller.userId !== payload.userId) {
+    if (product.seller.userId !== user.userId) {
       return NextResponse.json(
         { error: 'Forbidden: You can only delete your own products' },
         { status: 403 }
@@ -238,8 +214,16 @@ export async function DELETE(
     });
 
     return NextResponse.json({ message: 'Product deleted successfully' });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Delete product error:', error);
+    
+    if (error.message === 'Unauthorized') {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+    
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

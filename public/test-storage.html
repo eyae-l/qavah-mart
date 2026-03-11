@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>LocalStorage Test</title>
+</head>
+<body>
+    <h1>LocalStorage Test</h1>
+    <button onclick="testStorage()">Test Storage</button>
+    <button onclick="checkStorage()">Check Storage</button>
+    <button onclick="clearStorage()">Clear Storage</button>
+    <pre id="output"></pre>
+
+    <script>
+        function log(message) {
+            const output = document.getElementById('output');
+            output.textContent += message + '\n';
+            console.log(message);
+        }
+
+        function testStorage() {
+            document.getElementById('output').textContent = '';
+            try {
+                const testData = {
+                    items: [
+                        {
+                            productId: 'test-123',
+                            quantity: 2,
+                            addedAt: new Date().toISOString()
+                        }
+                    ],
+                    updatedAt: new Date().toISOString()
+                };
+                
+                localStorage.setItem('qavah_cart', JSON.stringify(testData));
+                log('✓ Successfully saved test data to localStorage');
+                
+                const retrieved = localStorage.getItem('qavah_cart');
+                log('✓ Retrieved data: ' + (retrieved ? 'YES' : 'NO'));
+                
+                if (retrieved) {
+                    const parsed = JSON.parse(retrieved);
+                    log('✓ Parsed data: ' + JSON.stringify(parsed, null, 2));
+                }
+            } catch (error) {
+                log('✗ Error: ' + error.message);
+            }
+        }
+
+        function checkStorage() {
+            document.getElementById('output').textContent = '';
+            try {
+                const data = localStorage.getItem('qavah_cart');
+                if (data) {
+                    log('✓ Cart data exists in localStorage');
+                    log(JSON.stringify(JSON.parse(data), null, 2));
+                } else {
+                    log('✗ No cart data found in localStorage');
+                }
+            } catch (error) {
+                log('✗ Error: ' + error.message);
+            }
+        }
+
+        function clearStorage() {
+            document.getElementById('output').textContent = '';
+            try {
+                localStorage.removeItem('qavah_cart');
+                log('✓ Cleared cart data from localStorage');
+            } catch (error) {
+                log('✗ Error: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>

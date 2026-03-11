@@ -4,11 +4,12 @@
 
 generator client {
   provider = "prisma-client-js"
-  engineType = "binary"
+  engineType = "library"
 }
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 // ============================================================================
@@ -16,9 +17,8 @@ datasource db {
 // ============================================================================
 
 model User {
-  id            String   @id @default(cuid())
+  id            String   @id // Clerk user ID (no default, comes from Clerk)
   email         String   @unique
-  password      String   // Hashed password
   firstName     String
   lastName      String
   phone         String?
@@ -28,9 +28,9 @@ model User {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   
-  // Location (embedded)
-  city          String
-  region        String
+  // Location (embedded) - optional, can be set later
+  city          String?
+  region        String?
   country       String   @default("Ethiopia")
   latitude      Float?
   longitude     Float?
@@ -198,4 +198,19 @@ model Session {
   @@index([token])
   @@index([expiresAt])
   @@map("sessions")
+}
+
+// ============================================================================
+// Shopping Cart Model
+// ============================================================================
+
+model Cart {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  items     Json     @default("[]") // Array of CartItem objects
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([userId])
+  @@map("carts")
 }

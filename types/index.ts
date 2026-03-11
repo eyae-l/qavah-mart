@@ -426,12 +426,65 @@ export interface ReviewFormData {
 
 /**
  * Cart item interface
- * Requirements: Future feature
+ * Requirements: Shopping Cart Feature - Requirements 1, 3, 4, 5
  */
 export interface CartItem {
   productId: string;
   quantity: number;
   addedAt: Date;
+}
+
+/**
+ * Cart item with full product data
+ * Requirements: Shopping Cart Feature - Requirements 2, 7
+ */
+export interface CartItemWithProduct extends CartItem {
+  product: Product;
+  lineTotal: number; // price × quantity
+}
+
+/**
+ * Cart summary with totals
+ * Requirements: Shopping Cart Feature - Requirements 7
+ */
+export interface CartSummary {
+  itemCount: number;      // Sum of all quantities
+  subtotal: number;       // Sum of all line totals
+  total: number;          // Subtotal (extensible for taxes/fees)
+}
+
+/**
+ * Storage adapter interface for cart persistence
+ * Requirements: Shopping Cart Feature - Requirements 5, 9
+ */
+export interface StorageAdapter {
+  getCart(): Promise<CartItem[]>;
+  saveCart(items: CartItem[]): Promise<void>;
+  clearCart(): Promise<void>;
+  mergeCart(localItems: CartItem[], remoteItems: CartItem[]): CartItem[];
+}
+
+/**
+ * Cart context state interface
+ * Requirements: Shopping Cart Feature - Requirements 1, 2, 3, 4, 6, 7, 9
+ */
+export interface CartContextState {
+  // State
+  items: CartItem[];
+  itemCount: number;
+  subtotal: number;
+  total: number;
+  isLoading: boolean;
+  
+  // Operations
+  addItem: (productId: string, quantity?: number) => Promise<void>;
+  updateQuantity: (productId: string, quantity: number) => Promise<void>;
+  removeItem: (productId: string) => Promise<void>;
+  clearCart: () => Promise<void>;
+  
+  // Utility
+  getItem: (productId: string) => CartItem | undefined;
+  hasItem: (productId: string) => boolean;
 }
 
 /**

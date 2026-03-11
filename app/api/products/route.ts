@@ -6,7 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { verifyToken } from '@/lib/auth';
+import { requireAuth } from '@/lib/clerkAuth';
 
 export async function GET(request: NextRequest) {
   try {
@@ -112,24 +112,8 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    // Get token from Authorization header
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    const token = authHeader.substring(7);
-    const payload = verifyToken(token);
-
-    if (!payload) {
-      return NextResponse.json(
-        { error: 'Invalid token' },
-        { status: 401 }
-      );
-    }
+    // Authenticate with Clerk
+    const user = await requireAuth();
 
     const body = await request.json();
     const {
@@ -156,15 +140,15 @@ export async function POST(request: NextRequest) {
 
     // Get or create seller for user
     let seller = await prisma.seller.findUnique({
-      where: { userId: payload.userId },
+      where: { userId: user.userId },
     });
 
     if (!seller) {
       // Create seller profile if doesn't exist
       seller = await prisma.seller.create({
         data: {
-          userId: payload.userId,
-          businessName: `${payload.email}'s Store`,
+          userId: user.userId,
+          businessName: `Seller ${user.userId}`,
           rating: 0,
           totalSales: 0,
         },
@@ -206,8 +190,16 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json(product, { status: 201 });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Create product error:', error);
+    
+    if (error.message === 'Unauthorized') {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+    
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

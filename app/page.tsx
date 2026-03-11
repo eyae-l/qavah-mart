@@ -1,7 +1,5 @@
-import Link from 'next/link';
 import { Metadata } from 'next';
 import ProductGrid from '@/components/ProductGrid';
-import { mockProducts } from '@/data/mockData';
 
 export const metadata: Metadata = {
   title: "Qavah-mart - Buy and Sell Computers in Ethiopia",
@@ -32,9 +30,25 @@ export const metadata: Metadata = {
   },
 };
 
-export default function Home() {
-  // Get first 8 products for featured section
-  const featuredProducts = mockProducts.slice(0, 8);
+async function getFeaturedProducts() {
+  try {
+    // Use relative URL for both dev and production
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    const res = await fetch(`${baseUrl}/api/products-supabase?limit=8`, {
+      cache: 'no-store',
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.products || [];
+  } catch (error) {
+    console.error('Failed to fetch products:', error);
+    return [];
+  }
+}
+
+export default async function Home() {
+  // Get products from database
+  const featuredProducts = await getFeaturedProducts();
 
   // Generate JSON-LD structured data for Organization schema
   const organizationJsonLd = {

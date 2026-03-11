@@ -87,6 +87,7 @@ Open [http://localhost:3000](http://localhost:3000) to view the application.
 ## Features
 
 - **Product Catalog**: Browse computers by 7 main categories
+- **Shopping Cart**: Add items to cart with localStorage (guest) and database (authenticated) persistence
 - **Search & Filter**: Advanced search with filters for price, brand, condition, and location
 - **User Authentication**: Register, login, and manage profiles
 - **Seller Dashboard**: Post and manage product listings
@@ -104,6 +105,14 @@ This project implements requirements 8.3, 10.2, and 10.3:
 - **8.3**: Professional brown and white color scheme
 - **10.2**: SEO best practices with meta tags
 - **10.3**: Image optimization for web delivery
+
+### Documentation
+
+- [Quick Start Guide](./docs/QUICK_START.md) - Setup and configuration
+- [Shopping Cart Implementation](./docs/CART_IMPLEMENTATION.md) - Cart architecture and usage
+- [Database Setup](./docs/SUPABASE_SETUP_GUIDE.md) - Supabase configuration
+- [Backend Implementation](./docs/BACKEND_IMPLEMENTATION_PLAN.md) - API routes and data models
+- [Deployment Guide](./docs/DEPLOYMENT_GUIDE.md) - Production deployment
 
 ### Next Steps
 

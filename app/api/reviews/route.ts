@@ -6,7 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { verifyToken } from '@/lib/auth';
+import { requireAuth } from '@/lib/clerkAuth';
 
 export async function GET(request: NextRequest) {
   try {
@@ -48,24 +48,8 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    // Get token from Authorization header
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    const token = authHeader.substring(7);
-    const payload = verifyToken(token);
-
-    if (!payload) {
-      return NextResponse.json(
-        { error: 'Invalid token' },
-        { status: 401 }
-      );
-    }
+    // Authenticate with Clerk
+    const user = await requireAuth();
 
     const body = await request.json();
     const { productId, rating, title, comment } = body;
@@ -105,7 +89,7 @@ export async function POST(request: NextRequest) {
     const existingReview = await prisma.review.findFirst({
       where: {
         productId,
-        userId: payload.userId,
+        userId: user.userId,
       },
     });
 
@@ -120,7 +104,7 @@ export async function POST(request: NextRequest) {
     const review = await prisma.review.create({
       data: {
         productId,
-        userId: payload.userId,
+        userId: user.userId,
         sellerId: product.sellerId,
         rating,
         title,
@@ -138,8 +122,16 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json(review, { status: 201 });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Create review error:', error);
+    
+    if (error.message === 'Unauthorized') {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+    
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

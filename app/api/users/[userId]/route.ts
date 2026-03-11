@@ -6,7 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { verifyToken, hashPassword } from '@/lib/auth';
+import { requireAuth } from '@/lib/clerkAuth';
 
 export async function GET(
   request: NextRequest,
@@ -73,27 +73,11 @@ export async function PUT(
   try {
     const { userId } = await params;
 
-    // Get token from Authorization header
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    const token = authHeader.substring(7);
-    const payload = verifyToken(token);
-
-    if (!payload) {
-      return NextResponse.json(
-        { error: 'Invalid token' },
-        { status: 401 }
-      );
-    }
+    // Authenticate with Clerk
+    const user = await requireAuth();
 
     // Check if user is updating their own profile
-    if (payload.userId !== userId) {
+    if (user.userId !== userId) {
       return NextResponse.json(
         { error: 'Forbidden: You can only update your own profile' },
         { status: 403 }
@@ -101,9 +85,9 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { firstName, lastName, phone, city, region, password } = body;
+    const { firstName, lastName, phone, city, region } = body;
 
-    // Prepare update data
+    // Prepare update data (no password field with Clerk)
     const updateData: any = {
       ...(firstName && { firstName }),
       ...(lastName && { lastName }),
@@ -111,11 +95,6 @@ export async function PUT(
       ...(city && { city }),
       ...(region && { region }),
     };
-
-    // Hash new password if provided
-    if (password) {
-      updateData.password = await hashPassword(password);
-    }
 
     // Update user
     const updatedUser = await prisma.user.update({
@@ -137,8 +116,16 @@ export async function PUT(
     });
 
     return NextResponse.json(updatedUser);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Update user error:', error);
+    
+    if (error.message === 'Unauthorized') {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+    
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

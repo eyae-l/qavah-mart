@@ -2,6 +2,7 @@
 
 import { Product, Seller } from '@/types';
 import { MapPin, CheckCircle, User } from 'lucide-react';
+import { AddToCartButton } from './AddToCartButton';
 
 export interface ProductDetailsProps {
   product: Product;
@@ -26,6 +27,9 @@ export default function ProductDetails({
   seller,
   onContactSeller,
 }: ProductDetailsProps) {
+  // Ensure seller.location exists with default values
+  const sellerLocation = seller.location || { city: '', region: '', country: '' };
+  
   // Handle contact seller click
   const handleContactSeller = () => {
     if (onContactSeller) {
@@ -109,6 +113,17 @@ export default function ProductDetails({
         <div className="text-4xl font-bold text-primary-700 mb-2">
           {formattedPrice}
         </div>
+        
+        {/* Add to Cart Button */}
+        {product.status === 'active' && (
+          <div className="mt-6">
+            <AddToCartButton
+              productId={product.id}
+              productTitle={product.title}
+              className="w-full md:w-auto"
+            />
+          </div>
+        )}
       </div>
 
       {/* Product Description */}
@@ -191,12 +206,14 @@ export default function ProductDetails({
                 </p>
               )}
 
-              <div className="flex items-center gap-1 text-sm text-neutral-600 mb-3">
-                <MapPin className="w-4 h-4" />
-                <span>
-                  {seller.location.city}, {seller.location.region}
-                </span>
-              </div>
+              {(sellerLocation.city || sellerLocation.region) && (
+                <div className="flex items-center gap-1 text-sm text-neutral-600 mb-3">
+                  <MapPin className="w-4 h-4" />
+                  <span>
+                    {sellerLocation.city}{sellerLocation.city && sellerLocation.region && ', '}{sellerLocation.region}
+                  </span>
+                </div>
+              )}
 
               {seller.rating > 0 && (
                 <div className="flex items-center gap-2 mb-3">
@@ -238,17 +255,19 @@ export default function ProductDetails({
       </div>
 
       {/* Product Location */}
-      <div className="border-t border-neutral-200 pt-6">
-        <h2 className="text-xl font-semibold text-neutral-900 mb-3">
-          Location
-        </h2>
-        <div className="flex items-center gap-2 text-neutral-700">
-          <MapPin className="w-5 h-5 text-primary-600" />
-          <span>
-            {product.location.city}, {product.location.region}, {product.location.country}
-          </span>
+      {product.location && (product.location.city || product.location.region) && (
+        <div className="border-t border-neutral-200 pt-6">
+          <h2 className="text-xl font-semibold text-neutral-900 mb-3">
+            Location
+          </h2>
+          <div className="flex items-center gap-2 text-neutral-700">
+            <MapPin className="w-5 h-5 text-primary-600" />
+            <span>
+              {product.location.city}{product.location.city && product.location.region && ', '}{product.location.region}{(product.location.city || product.location.region) && product.location.country && ', '}{product.location.country}
+            </span>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

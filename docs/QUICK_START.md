@@ -64,6 +64,42 @@ After running the commands, you should see:
 - ✅ Tables created in Supabase dashboard
 - ✅ Prisma Studio opens (if you ran it)
 
+## 🛒 Shopping Cart Setup
+
+The shopping cart feature is already integrated and works out of the box:
+
+### For Guest Users
+- Cart automatically saves to browser localStorage
+- No setup required
+- Cart persists across page reloads
+
+### For Authenticated Users
+- Cart automatically saves to database
+- Requires Clerk authentication (see below)
+- Cart syncs across devices
+
+### Cart Migration
+When a guest user logs in:
+1. Guest cart (localStorage) is automatically merged with user cart (database)
+2. Duplicate items have quantities summed
+3. All items preserved in database
+
+For detailed cart documentation, see [CART_IMPLEMENTATION.md](./CART_IMPLEMENTATION.md)
+
+## 🔐 Authentication Setup (Optional)
+
+The app uses Clerk for authentication. To enable authenticated user features:
+
+1. Create account at https://clerk.com
+2. Create new application
+3. Copy API keys to `.env`:
+   ```env
+   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
+   CLERK_SECRET_KEY=sk_test_...
+   ```
+
+Without Clerk, the app works in guest mode with localStorage cart persistence.
+
 ## 🎉 Success!
 
 If everything worked, you should see these tables in Supabase:
@@ -74,6 +110,7 @@ If everything worked, you should see these tables in Supabase:
 - categories
 - subcategories
 - sessions
+- carts (for shopping cart feature)
 
 ## ❌ Troubleshooting
 
