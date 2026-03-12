@@ -30,32 +30,9 @@ export const metadata: Metadata = {
   },
 };
 
-async function getFeaturedProducts() {
-  try {
-    // During build, skip fetching - just return empty array
-    if (process.env.NODE_ENV === 'production' && !process.env.VERCEL_URL) {
-      return [];
-    }
-    
-    const baseUrl = process.env.VERCEL_URL 
-      ? `https://${process.env.VERCEL_URL}`
-      : 'http://localhost:3000';
-    
-    const res = await fetch(`${baseUrl}/api/products-supabase?limit=8`, {
-      next: { revalidate: 60 }, // Cache for 1 minute
-    });
-    if (!res.ok) return [];
-    const data = await res.json();
-    return data.products || [];
-  } catch (error) {
-    console.error('Failed to fetch products:', error);
-    return [];
-  }
-}
-
-export default async function Home() {
-  // Get products from database
-  const featuredProducts = await getFeaturedProducts();
+export default function Home() {
+  // Empty array for now - products will load on client side
+  const featuredProducts: any[] = [];
 
   // Generate JSON-LD structured data for Organization schema
   const organizationJsonLd = {
