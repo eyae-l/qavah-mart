@@ -32,7 +32,16 @@ export const metadata: Metadata = {
 
 async function getFeaturedProducts() {
   try {
-    const res = await fetch(`/api/products-supabase?limit=8`, {
+    // During build, skip fetching - just return empty array
+    if (process.env.NODE_ENV === 'production' && !process.env.VERCEL_URL) {
+      return [];
+    }
+    
+    const baseUrl = process.env.VERCEL_URL 
+      ? `https://${process.env.VERCEL_URL}`
+      : 'http://localhost:3000';
+    
+    const res = await fetch(`${baseUrl}/api/products-supabase?limit=8`, {
       next: { revalidate: 60 }, // Cache for 1 minute
     });
     if (!res.ok) return [];
