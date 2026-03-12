@@ -32,6 +32,7 @@ export const metadata: Metadata = {
 };
 
 export const revalidate = 0;
+export const dynamic = 'force-dynamic';
 
 export default function Home() {
   // Empty array for now - products will load on client side
