@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import dynamic from 'next/dynamic';
 import ProductGrid from '@/components/ProductGrid';
 
 export const metadata: Metadata = {
@@ -29,6 +30,8 @@ export const metadata: Metadata = {
     images: ["/twitter-home.jpg"],
   },
 };
+
+export const revalidate = 0;
 
 export default function Home() {
   // Empty array for now - products will load on client side
