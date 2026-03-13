@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import ProductGrid from '@/components/ProductGrid';
+import FeaturedProductsClient from '@/components/FeaturedProductsClient';
 
 export const metadata: Metadata = {
   title: "Qavah-mart - Buy and Sell Computers in Ethiopia",
@@ -30,30 +31,7 @@ export const metadata: Metadata = {
   },
 };
 
-export const revalidate = 0;
-export const dynamic = 'force-dynamic';
-
-export default async function Home() {
-  // Fetch featured products from Supabase API
-  let featuredProducts: any[] = [];
-  
-  try {
-    // Use the deployed API URL for server-side fetching
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://qavah-mart-clrk.vercel.app';
-    const response = await fetch(`${apiUrl}/api/products-supabase`, {
-      cache: 'no-store', // Always fetch fresh data
-    });
-    
-    if (response.ok) {
-      const data = await response.json();
-      featuredProducts = data.products || [];
-    } else {
-      console.error('Failed to fetch products:', response.status);
-    }
-  } catch (error) {
-    console.error('Error fetching products:', error);
-  }
-
+export default function Home() {
   // Generate JSON-LD structured data for Organization schema
   const organizationJsonLd = {
     '@context': 'https://schema.org',
@@ -97,9 +75,7 @@ export default async function Home() {
         <h2 id="featured-heading" className="text-3xl font-bold text-neutral-900 mb-6">
           Featured Products
         </h2>
-        <ProductGrid 
-          products={featuredProducts}
-        />
+        <FeaturedProductsClient />
       </section>
     </div>
   );
