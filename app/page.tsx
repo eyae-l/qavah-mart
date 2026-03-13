@@ -34,9 +34,26 @@ export const metadata: Metadata = {
 export const revalidate = 0;
 export const dynamic = 'force-dynamic';
 
-export default function Home() {
-  // Empty array for now - products will load on client side
-  const featuredProducts: any[] = [];
+async function Home() {
+  // Fetch featured products from Supabase API
+  let featuredProducts: any[] = [];
+
+  try {
+    // Use the deployed API URL for server-side fetching
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://qavah-mart-clrk.vercel.app';
+    const response = await fetch(`${apiUrl}/api/products-supabase`, {
+      cache: 'no-store', // Always fetch fresh data
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      featuredProducts = data.products || [];
+    } else {
+      console.error('Failed to fetch products:', response.status);
+    }
+  } catch (error) {
+    console.error('Error fetching products:', error);
+  }
 
   // Generate JSON-LD structured data for Organization schema
   const organizationJsonLd = {
@@ -81,7 +98,7 @@ export default function Home() {
         <h2 id="featured-heading" className="text-3xl font-bold text-neutral-900 mb-6">
           Featured Products
         </h2>
-        <ProductGrid 
+        <ProductGrid
           products={featuredProducts}
         />
       </section>
