@@ -1,5 +1,4 @@
 import { Metadata } from 'next';
-import dynamic from 'next/dynamic';
 import ProductGrid from '@/components/ProductGrid';
 
 export const metadata: Metadata = {
@@ -34,17 +33,17 @@ export const metadata: Metadata = {
 export const revalidate = 0;
 export const dynamic = 'force-dynamic';
 
-async function Home() {
+export default async function Home() {
   // Fetch featured products from Supabase API
   let featuredProducts: any[] = [];
-
+  
   try {
     // Use the deployed API URL for server-side fetching
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://qavah-mart-clrk.vercel.app';
     const response = await fetch(`${apiUrl}/api/products-supabase`, {
       cache: 'no-store', // Always fetch fresh data
     });
-
+    
     if (response.ok) {
       const data = await response.json();
       featuredProducts = data.products || [];
@@ -98,7 +97,7 @@ async function Home() {
         <h2 id="featured-heading" className="text-3xl font-bold text-neutral-900 mb-6">
           Featured Products
         </h2>
-        <ProductGrid
+        <ProductGrid 
           products={featuredProducts}
         />
       </section>
