@@ -48,7 +48,9 @@ interface ProductDetailPageProps {
  */
 async function getProduct(productId: string) {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    // Determine the base URL for API calls
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 
+                    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
     const res = await fetch(`${baseUrl}/api/products-supabase/${productId}`, {
       cache: 'no-store',
     });
