@@ -1,11 +1,14 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import dynamic from 'next/dynamic';
+import dynamicImport from 'next/dynamic';
 import { ChevronRight } from 'lucide-react';
 import ProductDetails from '@/components/ProductDetails';
 
+// Mark as dynamic to prevent pre-rendering during build
+export const dynamic = 'force-dynamic';
+
 // Dynamic imports for heavy components
-const ProductImageGallery = dynamic(() => import('@/components/ProductImageGallery'), {
+const ProductImageGallery = dynamicImport(() => import('@/components/ProductImageGallery'), {
   loading: () => (
     <div className="w-full aspect-square bg-neutral-100 rounded-lg animate-pulse flex items-center justify-center">
       <div className="text-neutral-400">Loading gallery...</div>
@@ -13,7 +16,7 @@ const ProductImageGallery = dynamic(() => import('@/components/ProductImageGalle
   ),
 });
 
-const ReviewSection = dynamic(() => import('@/components/ReviewSection'), {
+const ReviewSection = dynamicImport(() => import('@/components/ReviewSection'), {
   loading: () => (
     <div className="border-t border-neutral-200 pt-12 mb-12">
       <div className="h-64 bg-neutral-100 rounded-lg animate-pulse"></div>
@@ -44,25 +47,43 @@ interface ProductDetailPageProps {
 }
 
 /**
- * Fetch product from database
+ * Fetch product from database using direct Supabase REST API
  */
 async function getProduct(productId: string) {
   try {
-    // Determine the base URL for API calls
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 
-                    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
-    const res = await fetch(`${baseUrl}/api/products-supabase/${productId}`, {
-      cache: 'no-store',
-    });
-    
-    if (!res.ok) {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseKey) {
+      console.error('Missing Supabase credentials');
       return null;
     }
-    
-    const data = await res.json();
-    const product = data.product;
+
+    // Build REST API URL for single product with seller info
+    const url = `${supabaseUrl}/rest/v1/products?select=*,seller:sellers!inner(id,businessName,rating,user:users!inner(firstName,lastName,city,region))&id=eq.${productId}`;
+
+    console.log('Fetching product from Supabase REST API:', productId);
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'apikey': supabaseKey,
+        'Authorization': `Bearer ${supabaseKey}`,
+        'Content-Type': 'application/json',
+      },
+      cache: 'no-store',
+    });
+
+    if (!response.ok) {
+      console.error('Supabase error response:', response.status);
+      return null;
+    }
+
+    const products = await response.json();
+    const product = products[0];
     
     if (!product || !product.seller) {
+      console.error('Product not found or missing seller:', productId);
       return null;
     }
     
